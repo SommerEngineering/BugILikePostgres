@@ -56,7 +56,7 @@ namespace BugILikePostgres
 
             #endregion
             
-            // Case 1: Partial search for "Artificial Intelligence" by means of ILike
+            // Case 1: Partial search for "Artificial Intelligence" by means of ILike (or Like)
             // Matches: 1 entry
             // Result: System.NullReferenceException: Object reference not set to an instance of an object.
             try

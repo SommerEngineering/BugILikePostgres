@@ -56,7 +56,7 @@ namespace BugILikePostgres
 
             #endregion
             
-            // Case 1: Partial search for "Artificial Intelligence" by means of ILike (or Like)
+            // Attempt 1: Partial search for "Artificial Intelligence" by means of ILike (or Like)
             // Matches: 1 entry
             // Result: System.NullReferenceException: Object reference not set to an instance of an object.
             try
@@ -82,7 +82,7 @@ namespace BugILikePostgres
                 Console.WriteLine();
             }
 
-            // Case 2: Search for exact matches
+            // Attempt 2: Search for exact matches
             // Matches: 2 entries
             // Result: works fine
             try
@@ -102,7 +102,7 @@ namespace BugILikePostgres
                 Console.WriteLine();
             }
             
-            // Case 3: Partial search for "Artificial Intelligence" by means of Any
+            // Attempt 3: Partial search for "Artificial Intelligence" by means of Any
             // Matches: 1 entry
             // Result: The LINQ expression [...] could not be translated.
             try
@@ -122,9 +122,9 @@ namespace BugILikePostgres
                 Console.WriteLine();
             }
             
-            // Case 4: (Partial) search for "Artificial Intelligence" by means of ILike (or Like) where matchExpress & pattern gets exchanged
+            // Attempt 4: (Partial) search for "Artificial Intelligence" by means of ILike (or Like) where matchExpress & pattern gets exchanged
             // Matches: 1 entry
-            // Result: works, but makes no sense (or might we miss something?), because the search term gets used as matchExpression...
+            // Result: "works", but makes no sense (or might we miss something?), because the search term gets used as matchExpression...
             try
             {
                 var searchTerm4a = "intelli"; // partial search not possible, because we cannot use patterns :(

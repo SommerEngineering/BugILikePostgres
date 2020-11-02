@@ -55,11 +55,66 @@ namespace BugILikePostgres
             await db.SaveChangesAsync();
 
             #endregion
+            
+            // Case 1: Partial search for "Artificial Intelligence" by means of ILike
+            // Matches: 1 entry
+            // Result: System.NullReferenceException: Object reference not set to an instance of an object.
+            try
+            {
+                var searchTerm1 = "intelli";
+                var result1 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm1}%")));
+                Console.WriteLine("Result Case 1:");
+                foreach (var blog in result1)
+                    Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                Console.WriteLine();
+            }
 
-            var searchTerm = "intelli";
-            var result = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm}%")));
-            foreach (var blog in result)
-                Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
+            // Case 2: Search for exact matches
+            // Matches: 2 entries
+            // Result: works fine
+            try
+            {
+                var searchTerm2 = "Interesting";
+                var result2 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Contains(searchTerm2));
+                Console.WriteLine("Result Case 2:");
+                foreach (var blog in result2)
+                    Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                Console.WriteLine();
+            }
+            
+            // Case 3: Partial search for "Artificial Intelligence" by means of Any
+            // Matches: 1 entry
+            // Result: The LINQ expression [...] could not be translated.
+            try
+            {
+                var searchTerm3 = "intelli";
+                var result3 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => s.Contains(searchTerm3)));
+                Console.WriteLine("Result Case 3:");
+                foreach (var blog in result3)
+                    Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                Console.WriteLine();
+            }
         }
     }
     

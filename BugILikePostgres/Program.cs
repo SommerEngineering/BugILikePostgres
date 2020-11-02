@@ -62,7 +62,13 @@ namespace BugILikePostgres
             try
             {
                 var searchTerm1 = "intelli";
+                
+                // The complete example, simulating our real use case
                 var result1 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm1}%")));
+                
+                // This does not work at well (simpler, just one where clause)
+                //var result1 = db.Blogs.Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm1}%")));
+                
                 Console.WriteLine("Result Case 1:");
                 foreach (var blog in result1)
                     Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
@@ -105,6 +111,27 @@ namespace BugILikePostgres
                 var result3 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => s.Contains(searchTerm3)));
                 Console.WriteLine("Result Case 3:");
                 foreach (var blog in result3)
+                    Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                Console.WriteLine();
+            }
+            
+            // Case 4: (Partial) search for "Artificial Intelligence" by means of ILike (or Like) where matchExpress & pattern gets exchanged
+            // Matches: 1 entry
+            // Result: works, but makes no sense (or might we miss something?), because the search term gets used as matchExpression...
+            try
+            {
+                var searchTerm4a = "intelli"; // partial search not possible, because we cannot use patterns :(
+                var searchTerm4b = "artificial intelligence"; // at least, ilike works :)
+                var result4 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => EF.Functions.ILike(searchTerm4b, s)));
+                Console.WriteLine("Result Case 4:");
+                foreach (var blog in result4)
                     Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
             }
             catch (Exception e)

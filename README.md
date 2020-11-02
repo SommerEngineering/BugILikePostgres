@@ -1,7 +1,7 @@
 # Introduction
 Dear Postgres team,
 
-This is a minimal sample repo for a potential bug, and thus a repo for you. Thank you very much for taking your time to check this issue.
+This is a minimal sample repo for a potential bug ([issue 1554](https://github.com/npgsql/efcore.pg/issues/1554)), and thus a repo for you. Thank you very much for taking your time to check this issue.
 
 # Scenario / Use Case
 We use columns with arrays in our database, for example to store topics. Every user can enter these topics as he likes, so we intentionally decided against a dedicated table for the topics.

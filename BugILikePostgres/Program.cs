@@ -69,7 +69,7 @@ namespace BugILikePostgres
                 // This does not work at well (simpler, just one where clause)
                 //var result1 = db.Blogs.Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm1}%")));
                 
-                Console.WriteLine("Result Case 1:");
+                Console.WriteLine("Result attempt 1:");
                 foreach (var blog in result1)
                     Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
             }
@@ -89,7 +89,7 @@ namespace BugILikePostgres
             {
                 var searchTerm2 = "Interesting";
                 var result2 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Contains(searchTerm2));
-                Console.WriteLine("Result Case 2:");
+                Console.WriteLine("Result attempt 2:");
                 foreach (var blog in result2)
                     Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
             }
@@ -109,7 +109,7 @@ namespace BugILikePostgres
             {
                 var searchTerm3 = "intelli";
                 var result3 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => s.Contains(searchTerm3)));
-                Console.WriteLine("Result Case 3:");
+                Console.WriteLine("Result attempt 3:");
                 foreach (var blog in result3)
                     Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
             }
@@ -130,7 +130,7 @@ namespace BugILikePostgres
                 var searchTerm4a = "intelli"; // partial search not possible, because we cannot use patterns :(
                 var searchTerm4b = "artificial intelligence"; // at least, ilike works :)
                 var result4 = db.Blogs.Where(n => n.Name.Contains("Test")).OrderBy(n => n.Id).Where(n => n.Topics.Any(s => EF.Functions.ILike(searchTerm4b, s)));
-                Console.WriteLine("Result Case 4:");
+                Console.WriteLine("Result attempt 4:");
                 foreach (var blog in result4)
                     Console.WriteLine($"[{blog.Id}] name={blog.Name}, topics={string.Join(", ", blog.Topics)}");
             }

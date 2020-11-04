@@ -9,9 +9,9 @@ We use columns with arrays in our database, for example to store topics. Every u
 Now the users should be able to search this data, even partially. Let us assume that a user has entered the topics `["Artificial Intelligence", "Big Data", "Robotics"]`. Then the search for `"intelli"` should also find this entry.
 
 # Issue
-In the `Program.cs` you find four attempts to address the use case:
+In the `Program.cs` you find six attempts to address the use case:
 
-- 1st attempt, starting from [line 59](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L59): Regarding to your ["Array Type Mapping" documentation](https://www.npgsql.org/efcore/mapping/array.html), this seems to be the way to go. Using `Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm1}%")))`. Unfortunately, this throws an `NullReferenceException`. Stacktrace:
+- 1st attempt, starting from [line 46](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L46): Regarding to your ["Array Type Mapping" documentation](https://www.npgsql.org/efcore/mapping/array.html), this seems to be the way to go. Using `Where(n => n.Topics.Any(s => EF.Functions.ILike(s, $"%{searchTerm1}%")))`. Unfortunately, this throws an `NullReferenceException`. Stacktrace:
 
 ```
 System.NullReferenceException: Object reference not set to an instance of an object.
@@ -44,9 +44,9 @@ on lambdaExpression)
    at BugILikePostgres.Program.Main(String[] args) in C:\_Data\Repositories\BugILikePostgres\BugILikePostgres\Program.cs:line 73
 ```
 
-- 2nd attempt, starting from [line 85](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L85): Using `Where(n => n.Topics.Contains(searchTerm2))` to find exact matches. Works fine, but users cannot search for partial words.
+- 2nd attempt, starting from [line 72](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L72): Using `Where(n => n.Topics.Contains(searchTerm2))` to find exact matches. Works fine, but users cannot search for partial words.
 
-- 3rd attempt, starting from [line 105](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L105): This was our initial attempt by using `Where(n => n.Topics.Any(s => s.Contains(searchTerm3)))`, as already mentioned in [Github issue 395](https://github.com/npgsql/efcore.pg/issues/395#issuecomment-718807096). It throws an `The LINQ expression [...] could not be translated` exception. Stacktrace:
+- 3rd attempt, starting from [line 92](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L92): This was our initial attempt by using `Where(n => n.Topics.Any(s => s.Contains(searchTerm3)))`, as already mentioned in [Github issue 395](https://github.com/npgsql/efcore.pg/issues/395#issuecomment-718807096). It throws an `The LINQ expression [...] could not be translated` exception. Stacktrace:
 
 ```
 System.InvalidOperationException: The LINQ expression 'DbSet<Blog>()
@@ -71,7 +71,11 @@ erting a call to 'AsEnumerable', 'AsAsyncEnumerable', 'ToList', or 'ToListAsync'
    at BugILikePostgres.Program.Main(String[] args) in C:\_Data\Repositories\BugILikePostgres\BugILikePostgres\Program.cs:line 113
 ```
 
-- 4th attempt, starting from [line 125](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L125): Following the introduction in the ["Array Type Mapping" documentation](https://www.npgsql.org/efcore/mapping/array.html) word-by-word, using `Where(n => n.Topics.Any(s => EF.Functions.ILike(searchTerm4b, s)))`. Uses the same approach as 1st attempt, but exchanging the `matchExpress` with the `pattern` (as the example in the documentation does it). Thus, it makes no sense, because we cannot use pattern anymore. Or do we miss something? This works fine, but the user cannot search for partial words. **This 4th attempt is interesting, because it shows, that there is no `null` involved. Thus, why 1st attempt throws an NPE, though?**
+- 4th attempt, starting from [line 112](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L112): Following the introduction in the ["Array Type Mapping" documentation](https://www.npgsql.org/efcore/mapping/array.html) word-by-word, using `Where(n => n.Topics.Any(s => EF.Functions.ILike(searchTerm4b, s)))`. Uses the same approach as 1st attempt, but exchanging the `matchExpress` with the `pattern` (as the example in the documentation does it). Thus, it makes no sense, because we cannot use pattern anymore. Or do we miss something? This works fine, but the user cannot search for partial words. **This 4th attempt is interesting, because it shows, that there is no `null` involved. Thus, why 1st attempt throws an NPE, though?**
+
+- 5th attempt, starting from [line 133](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L133): Using a second table for the text data. Partial searching this table and pull the matching ids to the C# client-side as array (not `List<int>`!). Then, use `Where(n => n.Topics.Any(i => matchingTopicIds.Contains(i)))` to get the matching entries. This attempt works fine.
+
+- 6th attempt, starting from [line 157](https://github.com/SommerEngineering/BugILikePostgres/blob/main/BugILikePostgres/Program.cs#L157): Same as 5th attempt, but tries to perform the entire query on the db side. Does not work, though: The query cannot be translated.
 
 # Environment
 - .NET 5.0 RC2

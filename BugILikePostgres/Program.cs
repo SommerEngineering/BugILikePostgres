@@ -22,6 +22,23 @@ namespace BugILikePostgres
                 await db.Blogs.AddAsync(new Blog { Id = 3, Name = "Other 3", Topics = new List<string> { "Not Interesting",}});
             }
 
+            if (!await db.Topics.AnyAsync())
+            {
+                await db.Topics.AddAsync(new Topic{Id = 1, Name = "Artificial Intelligence"});
+                await db.Topics.AddAsync(new Topic{Id = 2, Name = "Smart Cities"});
+                await db.Topics.AddAsync(new Topic{Id = 3, Name = "Big Data"});
+                await db.Topics.AddAsync(new Topic{Id = 4, Name = "Computer Science"});
+                await db.Topics.AddAsync(new Topic{Id = 5, Name = "artificial intelligence"});
+            }
+
+            if (!await db.Users.AnyAsync())
+            {
+                await db.Users.AddAsync(new User { Id = 1, Name = "Tom", Topics = new []{1, 3}});
+                await db.Users.AddAsync(new User { Id = 2, Name = "Joe", Topics = new []{2}});
+                await db.Users.AddAsync(new User { Id = 3, Name = "Maria", Topics = new []{5, 3, 2}});
+                await db.Users.AddAsync(new User { Id = 4, Name = "Julia", Topics = new []{3, 1, 5}});
+            }
+
             await db.SaveChangesAsync();
 
             #endregion
@@ -112,12 +129,64 @@ namespace BugILikePostgres
             {
                 Console.WriteLine();
             }
+            
+            // Attempt 5: using an additional table for the text and array columns to store ids pointing to them (pulling ids to C# client)
+            // Matches: 3
+            // Result: Works, when matching topic ids are pulled to the C# side. Does not work completely on db side (see attempt 6).
+            try
+            {
+                var searchTerm5 = "in";
+                var matchingTopicIds = db.Topics.Where(n => EF.Functions.ILike(n.Name, $"%{searchTerm5}%")).Select(n => n.Id).ToArray();
+                var matchingUsers = db.Users.Where(n => n.Name.Length > 2).OrderBy(n => n.Name).Where(n => n.Topics.Any(i => matchingTopicIds.Contains(i)));
+                
+                Console.WriteLine("Result attempt 5:");
+                foreach (var topic in matchingTopicIds)
+                    Console.WriteLine($"matching topic id={topic}");
+                foreach (var user in matchingUsers)
+                    Console.WriteLine($"[{user.Id}] name={user.Name}, topics={string.Join(", ", user.Topics)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                Console.WriteLine();
+            }
+            
+            // Attempt 6: using an additional table for the text and array columns to store ids pointing to them (db side)
+            // Matches: 3
+            // Result: Does not work...
+            try
+            {
+                var searchTerm6 = "in";
+                var matchingTopicIds = db.Topics.Where(n => EF.Functions.ILike(n.Name, $"%{searchTerm6}%")).Select(n => n.Id);
+                var matchingUsers = db.Users.Where(n => n.Name.Length > 2).OrderBy(n => n.Name).Where(n => n.Topics.Any(i => matchingTopicIds.Contains(i)));
+                
+                Console.WriteLine("Result attempt 6:");
+                foreach (var topic in matchingTopicIds)
+                    Console.WriteLine($"matching topic id={topic}");
+                foreach (var user in matchingUsers)
+                    Console.WriteLine($"[{user.Id}] name={user.Name}, topics={string.Join(", ", user.Topics)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                Console.WriteLine();
+            }
         }
     }
     
     public class Database : DbContext
     {
         public DbSet<Blog> Blogs { get; set; }
+
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<Topic> Topics { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=BugILike;Username=tester;Password=test");
 
@@ -128,6 +197,12 @@ namespace BugILikePostgres
             modelBuilder.Entity<Blog>().HasKey(n => n.Id);
             modelBuilder.Entity<Blog>().HasIndex(n => n.Name);
             modelBuilder.Entity<Blog>().HasIndex(n => n.Topics);
+
+            modelBuilder.Entity<User>().HasKey(n => n.Id);
+            modelBuilder.Entity<User>().HasIndex(n => n.Name);
+            modelBuilder.Entity<User>().HasIndex(n => n.Topics);
+            modelBuilder.Entity<Topic>().HasKey(n => n.Id);
+            modelBuilder.Entity<Topic>().HasIndex(n => n.Name);
         }
     }
     
@@ -136,5 +211,18 @@ namespace BugILikePostgres
         public int Id { get; set; }
         public string Name { get; set; }
         public List<string> Topics { get; set; }
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int[] Topics { get; set; }
+    }
+
+    public class Topic
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

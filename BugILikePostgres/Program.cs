@@ -17,39 +17,9 @@ namespace BugILikePostgres
             await db.Database.MigrateAsync();
             if (!await db.Blogs.AnyAsync())
             {
-                await db.Blogs.AddAsync(new Blog
-                {
-                    Id = 1,
-                    Name = "Test 1",
-                    Topics = new List<string>
-                    {
-                        "Interesting",
-                        "Big Data",
-                        "Artificial Intelligence",
-                    },
-                });
-
-                await db.Blogs.AddAsync(new Blog
-                {
-                    Id = 2,
-                    Name = "Test 2",
-                    Topics = new List<string>
-                    {
-                        "Interesting",
-                        "Smart Cities",
-                        "Artificial Topologies",
-                    },
-                });
-                
-                await db.Blogs.AddAsync(new Blog
-                {
-                    Id = 3,
-                    Name = "Other 3",
-                    Topics = new List<string>
-                    {
-                        "Not Interesting",
-                    },
-                });
+                await db.Blogs.AddAsync(new Blog { Id = 1, Name = "Test 1", Topics = new List<string> { "Interesting", "Big Data", "Artificial Intelligence",}});
+                await db.Blogs.AddAsync(new Blog { Id = 2, Name = "Test 2", Topics = new List<string> { "Interesting", "Smart Cities", "Artificial Topologies",}});
+                await db.Blogs.AddAsync(new Blog { Id = 3, Name = "Other 3", Topics = new List<string> { "Not Interesting",}});
             }
 
             await db.SaveChangesAsync();
